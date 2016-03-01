@@ -2,6 +2,19 @@
 
 #define END_OF_QUERY '#'
 
+@interface NSMutableString (CMHQueryParser)
+- (void)appendUnichar:(unichar)c;
+@end
+
+@implementation NSMutableString (CMHQueryParser)
+
+- (void)appendUnichar:(unichar)c
+{
+    [self appendString:[NSString stringWithCharacters:&c length:1]];
+}
+
+@end
+
 @interface CMHQueryParser ()
 @property (nonatomic, nonnull, readwrite) NSArray<NSString *> *queryStatements;
 @property (nonatomic) NSString *queryString;
@@ -19,13 +32,11 @@
 
     self.queryString = [CMHQueryParser stripWhite:query];
     self.charIndex = 0;
-    
-    [self skipWhite];
+
     [self match:'['];
 
     while (self.peek != END_OF_QUERY) {
         [self eatStatement];
-        [self skipWhite];
 
         if (self.peek == ']') {
             return;
@@ -41,14 +52,6 @@
     self.charIndex++;
 }
 
-// TODO: remove for first pass extracting whitespace
-- (void)skipWhite
-{
-    if (self.peek == ' ') {
-        [self advanceChar];
-    }
-}
-
 - (void)match:(unichar)c
 {
     NSAssert(self.peek == c, @"Expected %C", c); // TODO: throw a real exception
@@ -57,25 +60,24 @@
 
 - (void)eatStatement
 {
-    [self skipWhite];
-
     NSMutableString *statement = [NSMutableString stringWithFormat:@""];
-    NSString *thisChar = nil;
 
     while (self.peek != ',' && self.peek != ']' && self.peek != END_OF_QUERY) {
-        unichar peekChar = self.peek;
-        thisChar = [NSString stringWithCharacters:&peekChar length:1];
-
-        [statement appendString:thisChar];
+        [statement appendUnichar:self.peek];
         [self advanceChar];
     }
 
+    [self addStatement:[statement copy]];
+}
+
+- (void)addStatement:(NSString *)statement
+{
     if ([@"" isEqualToString:statement]) {
         return;
     }
 
     NSMutableArray *mutableStatements = [self.queryStatements mutableCopy];
-    [mutableStatements addObject:[statement copy]];
+    [mutableStatements addObject:statement];
     self.queryStatements = [mutableStatements copy];
 }
 
@@ -89,7 +91,7 @@
             continue;
         }
 
-        [mutableNewString appendString:[NSString stringWithCharacters:&thisChar length:1]];
+        [mutableNewString appendUnichar:thisChar];
     }
 
     return [mutableNewString copy];
