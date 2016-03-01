@@ -109,6 +109,26 @@
 
     return _queryStatements;
 }
+
+- (NSString *)query
+{
+    NSMutableString *mutableQuery = [NSMutableString stringWithFormat:@"["];
+    BOOL first = YES;
+
+    for (NSString *statement in self.queryStatements) {
+        if (first) {
+            first = NO;
+        } else {
+            [mutableQuery appendString:@","];
+        }
+
+        [mutableQuery appendString:statement];
+    }
+
+    [mutableQuery appendString:@"]"];
+    return [mutableQuery copy];
+}
+
 - (unichar)peek
 {
     if (self.charIndex >= [self.queryString length]) {

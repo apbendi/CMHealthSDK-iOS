@@ -73,6 +73,28 @@ describe(@"CMHQueryParser", ^{
         expect([parser.queryStatements objectAtIndex:1]).to.equal(@"descriptor=\"MyDescriptor\"");
     });
 
+    it(@"Should return empty brackets for an empty query", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        expect(parser.query).to.equal(@"[]");
+    });
+
+    it(@"Should reassemble a query with two statements", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        [parser parse:@"[__class__ = \"ORKResult\", descriptor = \"MyDescriptor\"]"];
+
+        expect(parser.query).to.equal(@"[__class__=\"ORKResult\",descriptor=\"MyDescriptor\"]");
+    });
+
+    it(@"Should reassemble a query with one statement", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        [parser parse:@"[__class__ = \"ORKResult\"]"];
+
+        expect(parser.query).to.equal(@"[__class__=\"ORKResult\"]");
+    });
+
     it(@"Should Pass", ^{
         expect(YES).to.equal(YES);
     });
