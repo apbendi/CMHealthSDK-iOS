@@ -17,7 +17,7 @@
         return;
     }
 
-    self.queryString = query;
+    self.queryString = [CMHQueryParser stripWhite:query];
     [self skipWhite];
     [self match:'['];
 
@@ -68,9 +68,29 @@
         [self advanceChar];
     }
 
+    if ([@"" isEqualToString:statement]) {
+        return;
+    }
+
     NSMutableArray *mutableStatements = [self.queryStatements mutableCopy];
     [mutableStatements addObject:[statement copy]];
     self.queryStatements = [mutableStatements copy];
+}
+
++ (NSString *)stripWhite:(NSString *)aString
+{
+    NSMutableString *mutableNewString = [NSMutableString stringWithFormat:@""];
+
+    for(int i = 0; i < aString.length; i++) {
+        unichar thisChar = [aString characterAtIndex:i];
+        if (' ' == thisChar || '\t' == thisChar) {
+            continue;
+        }
+
+        [mutableNewString appendString:[NSString stringWithCharacters:&thisChar length:1]];
+    }
+
+    return [mutableNewString copy];
 }
 
 #pragma mark Getter-Setters
