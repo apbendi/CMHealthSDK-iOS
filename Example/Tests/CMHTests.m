@@ -59,7 +59,7 @@ describe(@"CMHQueryParser", ^{
 
         expect(^{
             [parser parse:@"__class__ = \"NSObject\""];
-        }).to.raiseAny();
+        }).to.raise(@"InvalidQueryException");
     });
 
     it(@"Should combine statements when parsing multiple queries", ^{

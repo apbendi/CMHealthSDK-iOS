@@ -54,7 +54,10 @@
 
 - (void)match:(unichar)c
 {
-    NSAssert(self.peek == c, @"Expected %C", c); // TODO: throw a real exception
+    if (c != self.peek) {
+        @throw [NSException exceptionWithName:@"InvalidQueryException" reason:nil userInfo:nil];
+    }
+
     [self advanceChar];
 }
 
