@@ -30,6 +30,10 @@
         return;
     }
 
+    if ([CMHQueryParser containsOr:query]) {
+        @throw [NSException exceptionWithName:@"InvalidQueryException" reason:@"Use of 'or' statements not supported" userInfo:nil];
+    }
+
     self.queryString = [CMHQueryParser stripWhite:query];
     self.charIndex = 0;
 
@@ -82,6 +86,17 @@
     NSMutableArray *mutableStatements = [self.queryStatements mutableCopy];
     [mutableStatements addObject:statement];
     self.queryStatements = [mutableStatements copy];
+}
+
++ (BOOL)containsOr:(NSString *)query
+{
+    NSError *regexError = nil;
+    NSRegularExpression *regEx = [NSRegularExpression regularExpressionWithPattern:@"\\s+or\\s+" options:0 error:&regexError];
+    NSAssert(nil == regexError, @"Parser, internal error in regular expression %@", regexError.localizedDescription);
+
+    NSArray *matches = [regEx matchesInString:query options:0 range:NSMakeRange(0, query.length)];
+
+    return matches.count > 0;
 }
 
 + (NSString *)stripWhite:(NSString *)aString

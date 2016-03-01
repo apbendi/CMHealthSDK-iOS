@@ -95,6 +95,22 @@ describe(@"CMHQueryParser", ^{
         expect(parser.query).to.equal(@"[__class__=\"ORKResult\"]");
     });
 
+    it(@"Should raise an exception for a query joined by or statements", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        expect(^{
+            [parser parse:@"[__class__ = \"ORKResult\" or descriptor = \"MyDescriptor\"]"];
+        }).to.raise(@"InvalidQueryException");
+    });
+
+    it(@"Should raise an excpetion for a query combining ',' and 'or' statements", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        expect(^{
+            [parser parse:@"[__class__ = \"ORKResult\", descriptor = \"SomeDescriptor\" or descriptor = \"MyDescriptor\"]"];
+        }).to.raise(@"InvalidQueryException");
+    });
+
     it(@"Should Pass", ^{
         expect(YES).to.equal(YES);
     });
