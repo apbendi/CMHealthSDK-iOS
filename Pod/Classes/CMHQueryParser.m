@@ -18,6 +18,8 @@
     }
 
     self.queryString = [CMHQueryParser stripWhite:query];
+    self.charIndex = 0;
+    
     [self skipWhite];
     [self match:'['];
 

@@ -62,6 +62,17 @@ describe(@"CMHQueryParser", ^{
         }).to.raiseAny();
     });
 
+    it(@"Should combine statements when parsing multiple queries", ^{
+        CMHQueryParser *parser = [CMHQueryParser new];
+
+        [parser parse:@"[__class__ = \"ORKResult\"]"];
+        [parser parse:@"[descriptor = \"MyDescriptor\"]"];
+
+        expect(parser.queryStatements.count).to.equal(2);
+        expect([parser.queryStatements objectAtIndex:0]).to.equal(@"__class__=\"ORKResult\"");
+        expect([parser.queryStatements objectAtIndex:1]).to.equal(@"descriptor=\"MyDescriptor\"");
+    });
+
     it(@"Should Pass", ^{
         expect(YES).to.equal(YES);
     });
