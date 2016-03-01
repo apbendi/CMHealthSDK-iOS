@@ -2,7 +2,7 @@
 
 @interface CMHQueryParser : NSObject
 
-@property (nonatomic, nonnull) NSMutableArray<NSString *> *queryStatements;
+@property (nonatomic, nonnull, readonly) NSArray<NSString *> *queryStatements;
 
 - (void)parse:(NSString *_Nullable)query;
 

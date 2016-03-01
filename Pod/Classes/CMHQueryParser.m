@@ -3,22 +3,13 @@
 #define END_OF_QUERY '#'
 
 @interface CMHQueryParser ()
+@property (nonatomic, nonnull, readwrite) NSArray<NSString *> *queryStatements;
 @property (nonatomic) NSString *queryString;
 @property (nonatomic) NSUInteger charIndex;
 @property (nonatomic, readonly) unichar peek;
 @end
 
 @implementation CMHQueryParser
-
-- (instancetype)init
-{
-    self = [super init];
-    if (nil == self) return nil;
-
-    self.queryStatements = [NSMutableArray new];
-
-    return self;
-}
 
 - (void)parse:(NSString *)query
 {
@@ -77,10 +68,20 @@
         [self advanceChar];
     }
 
-    [self.queryStatements addObject:[statement copy]];
+    NSMutableArray *mutableStatements = [self.queryStatements mutableCopy];
+    [mutableStatements addObject:[statement copy]];
+    self.queryStatements = [mutableStatements copy];
 }
 
 #pragma mark Getter-Setters
+- (NSArray<NSString *> *)queryStatements
+{
+    if (nil == _queryStatements) {
+        _queryStatements = @[];
+    }
+
+    return _queryStatements;
+}
 - (unichar)peek
 {
     if (self.charIndex >= [self.queryString length]) {
