@@ -10,6 +10,16 @@
 
 @implementation CMHQueryParser
 
+- (instancetype)init
+{
+    self = [super init];
+    if (nil == self) return nil;
+
+    self.queryStatements = [NSMutableArray new];
+
+    return self;
+}
+
 - (void)parse:(NSString *)query
 {
     if (nil == query) {
@@ -24,7 +34,7 @@
         [self eatStatement];
         [self skipWhite];
 
-        if (self.peek != ']') {
+        if (self.peek == ']') {
             return;
         } else {
             [self match:','];
@@ -35,7 +45,7 @@
 #pragma mark Private
 - (void)advanceChar
 {
-
+    self.charIndex++;
 }
 
 // TODO: remove for first pass extracting whitespace
@@ -49,25 +59,28 @@
 - (void)match:(unichar)c
 {
     NSAssert(self.peek == c, @"Expected %C", c); // TODO: throw a real exception
+    [self advanceChar];
 }
 
 - (void)eatStatement
 {
     [self skipWhite];
-    // TODO: advance past legal statement chars
+
+    NSMutableString *statement = [NSMutableString stringWithFormat:@""];
+    NSString *thisChar = nil;
+
+    while (self.peek != ',' && self.peek != ']' && self.peek != END_OF_QUERY) {
+        unichar peekChar = self.peek;
+        thisChar = [NSString stringWithCharacters:&peekChar length:1];
+
+        [statement appendString:thisChar];
+        [self advanceChar];
+    }
+
+    [self.queryStatements addObject:[statement copy]];
 }
 
 #pragma mark Getter-Setters
-
-- (NSArray<NSString *> *)statements
-{
-    if (nil == _statements) {
-        return @[];
-    }
-
-    return _statements;
-}
-
 - (unichar)peek
 {
     if (self.charIndex >= [self.queryString length]) {
