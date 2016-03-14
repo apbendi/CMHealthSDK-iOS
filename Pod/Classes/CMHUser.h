@@ -7,6 +7,7 @@
 typedef void(^CMHUserAuthCompletion)(NSError * _Nullable error);
 typedef void(^CMHUserLogoutCompletion)(NSError * _Nullable error);
 typedef void(^CMHUploadConsentCompletion)(NSError *_Nullable error);
+typedef void(^CMHUploadConsentAndPDFCompletion)(NSData *pdfData, NSError *_Nullable error);
 typedef void(^CMHResetPasswordCompletion)(NSError *_Nullable error);
 typedef void(^CMHFetchConsentCompletion)(CMHConsent *_Nullable consent, NSError *_Nullable error);
 
@@ -24,6 +25,15 @@ typedef void(^CMHFetchConsentCompletion)(CMHConsent *_Nullable consent, NSError 
 - (void)uploadUserConsent:(ORKTaskResult *_Nullable)consentResult
    forStudyWithDescriptor:(NSString *_Nullable)descriptor
             andCompletion:(_Nullable CMHUploadConsentCompletion)block;
+
+- (void)uploadUserConsent:(ORKTaskResult *_Nullable)consentResult
+andPDFWithConsentDocument:(ORKConsentDocument *_Nullable)consentDocument
+            withCompletion:(_Nullable CMHUploadConsentAndPDFCompletion)block;
+
+- (void)uploadUserConsent:(ORKTaskResult *_Nullable)consentResult
+andPDFWithConsentDocument:(ORKConsentDocument *_Nullable)consentDocument
+   forStudyWithDescriptor:(NSString *_Nullable)descriptor
+            andCompletion:(_Nullable CMHUploadConsentAndPDFCompletion)block;
 
 - (void)fetchUserConsentForStudyWithCompletion:(_Nonnull CMHFetchConsentCompletion)block;
 

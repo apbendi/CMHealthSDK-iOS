@@ -131,6 +131,57 @@
     }];
 }
 
+- (void)uploadUserConsent:(ORKTaskResult *_Nullable)consentResult andPDFWithConsentDocument:(ORKConsentDocument *_Nullable)consentDocument withCompletion:(_Nullable CMHUploadConsentAndPDFCompletion)block
+{
+    [self uploadUserConsent:consentResult andPDFWithConsentDocument:consentDocument forStudyWithDescriptor:nil andCompletion:block];
+}
+
+- (void)uploadUserConsent:(ORKTaskResult *_Nullable)consentResult andPDFWithConsentDocument:(ORKConsentDocument *_Nullable)consentDocument forStudyWithDescriptor:(NSString *_Nullable)descriptor andCompletion:(_Nullable CMHUploadConsentAndPDFCompletion)block
+{
+    if (nil == consentDocument) {
+        NSError *missingConsentError = [CMHErrorUtilities errorWithCode:CMHErrorMissingConsentDocument
+                                                   localizedDescription:NSLocalizedString(@"Must provide consent document to generate PDF", nil)];
+        block(nil, missingConsentError);
+        return;
+    }
+
+    [self uploadUserConsent:consentResult forStudyWithDescriptor:descriptor andCompletion:^(NSError * _Nullable consentUploadError) {
+        if (nil != consentUploadError) {
+            if (nil != block) {
+                block(nil, consentUploadError);
+            }
+            return;
+        }
+
+        // TODO: Figure out how to get the signature result and apply it to the document copyi
+        ORKConsentDocument *documentCopy = [consentDocument copy];
+        [documentCopy makePDFWithCompletionHandler:^(NSData * _Nullable pdfData, NSError * _Nullable pdfError) {
+            NSError *localPDFError = [CMHUser errorForPDFGenerationError:pdfError];
+            if (nil != localPDFError) {
+                if (nil != block) {
+                    block(nil, localPDFError);
+                }
+                return;
+            }
+
+            [[CMStore defaultStore] saveUserFileWithData:pdfData additionalOptions:nil callback:^(CMFileUploadResponse *fileResponse) {
+            //[[CMStore defaultStore] saveFileWithData:pdfData additionalOptions:nil callback:^(CMFileUploadResponse *fileResponse) {
+                if (nil == block) {
+                    return;
+                }
+
+                NSError *pdfUploadError = [CMHUser errorForPDFUploadResponse:fileResponse];
+                if (nil != pdfUploadError) {
+                    block(nil, pdfUploadError);
+                    return;
+                }
+
+                block(pdfData, nil);
+            }];
+        }];
+    }];
+}
+
 - (void)fetchUserConsentForStudyWithCompletion:(CMHFetchConsentCompletion)block
 {
     [self fetchUserConsentForStudyWithDescriptor:nil andCompletion:block];
@@ -323,21 +374,44 @@
         return fileUploadError;
     }
 
-    return [self errorForSignatureUploadResult:response.result];
+    return [self errorForUploadResult:response.result];
 }
 
-+ (NSError * _Nullable)errorForSignatureUploadResult:(CMFileUploadResult)result
++ (NSError *_Nullable)errorForPDFGenerationError:(NSError *)error
+{
+    if (nil == error) {
+        return nil;
+    }
+
+    NSString *message = [NSString localizedStringWithFormat:@"Failed to generate PDF; %@", error.localizedDescription];
+
+    return [CMHErrorUtilities errorWithCode:CMHErrorFailedToGeneratePDF localizedDescription:message];
+}
+
++ (NSError *_Nullable)errorForPDFUploadResponse:(CMFileUploadResponse *)response
+{
+    if (nil != response.error) {
+        NSString *fileUploadMessage = [NSString localizedStringWithFormat:@"Failed to upload consent PDF; %@", response.error.localizedDescription];
+        NSError *fileUploadError = [CMHErrorUtilities errorWithCode:CMHErrorFailedToUploadSignature
+                                               localizedDescription:fileUploadMessage];
+        return fileUploadError;
+    }
+
+    return [self errorForUploadResult:response.result];
+}
+
++ (NSError * _Nullable)errorForUploadResult:(CMFileUploadResult)result
 {
     switch (result) {
         case CMFileCreated:
             return nil;
         case CMFileUpdated:
             return [CMHErrorUtilities errorWithCode:CMHErrorFailedToUploadSignature
-                               localizedDescription:NSLocalizedString(@"Overwrote an existing signature while saving", nil)];
+                               localizedDescription:NSLocalizedString(@"Overwrote an existing file while saving", nil)];
         case CMFileUploadFailed:
         default:
             return [CMHErrorUtilities errorWithCode:CMHErrorFailedToUploadSignature
-                               localizedDescription:NSLocalizedString(@"Failed to upload signature", nil)];
+                               localizedDescription:NSLocalizedString(@"Failed to upload file", nil)];
     }
 }
 
